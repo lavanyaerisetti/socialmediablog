@@ -56,7 +56,8 @@ public class PostServcieImpl implements PostService {
     @Override
     public PostDto updatePost(PostDto postDto, Long postIdToBeUpdated) {
 
-        PostEntity postToBeUpdated = postRepository.findById(postIdToBeUpdated).orElseThrow(()->new RuntimeException("Post not found by Id " +postIdToBeUpdated));
+        PostEntity postToBeUpdated = postRepository.findById(postIdToBeUpdated)
+                              .orElseThrow(()->new RuntimeException("Post not found by Id " +postIdToBeUpdated));
         postToBeUpdated.setTitle(postDto.getTitle());
         postToBeUpdated.setDescription(postDto.getDescription());
         postToBeUpdated.setContent(postDto.getContent());
@@ -70,11 +71,17 @@ public class PostServcieImpl implements PostService {
     //Delete PostById
 @Override
     public boolean deletePostById(Long postByIdToBeDeleted){
-        PostEntity postToBeDeleted=postRepository.findById(postByIdToBeDeleted).orElseThrow(()->new RuntimeException("Post not found to delete by Id " +postByIdToBeDeleted));
-        postRepository.delete(postToBeDeleted);
-        return true;
+        Optional<PostEntity> postToBeDeleted=postRepository.findById(postByIdToBeDeleted);
+        if(postToBeDeleted.isPresent()){
+            postRepository.delete(postToBeDeleted.get());
+            return true;
+        }
+
+        return false;
 
     }
+
+
 }
 
 
