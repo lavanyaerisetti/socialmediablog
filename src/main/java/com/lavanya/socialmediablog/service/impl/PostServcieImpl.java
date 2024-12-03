@@ -2,12 +2,15 @@ package com.lavanya.socialmediablog.service.impl;
 
 import com.lavanya.socialmediablog.dto.PostDto;
 import com.lavanya.socialmediablog.entity.PostEntity;
+import com.lavanya.socialmediablog.payload.PostResponse;
 import com.lavanya.socialmediablog.repository.PostRepository;
 import com.lavanya.socialmediablog.service.PostService;
 import com.lavanya.socialmediablog.utils.PostEntityMapper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.context.config.ConfigDataResourceNotFoundException;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+
+import org.springframework.data.domain.*;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -32,6 +35,48 @@ public class PostServcieImpl implements PostService {
         }
         return null;
     }
+
+    @Override
+    public PostResponse getAllPosts(int pageNo, int pageSize){
+        Pageable pageable = PageRequest.of(pageNo,pageSize);
+        Page<PostEntity> postEntityList=postRepository.findAll(pageable);
+        if(postEntityList!=null){
+            List<PostDto> postDtoList=postEntityList.stream().map(postEntity -> postEntityMapper.mapPostEntityToPostDto(postEntity)).collect(Collectors.toList());
+            PostResponse postResponse=PostResponse.builder().content(postDtoList).pageNo(postEntityList.getNumber())
+                                      .pageSize(postEntityList.getSize()).totalElements(postEntityList.getTotalElements())
+                    .totalPages(postEntityList.getTotalPages()).isLastPage(postEntityList.isLast()).build();
+
+        return postResponse;
+        }
+
+    return null;
+    }
+
+    @Override
+    public PostResponse getAllPosts(int pageNo, int pageSize, String sortBy, String sortDirection) {
+
+        Pageable pageable =null;
+
+        if(sortBy !=null && sortDirection !=null){
+
+            Sort sort=sortDirection.equalsIgnoreCase("ASC")?Sort.by(sortBy).ascending():Sort.by(sortBy).descending();
+            pageable=PageRequest.of(pageNo,pageSize,sort);
+        }else{
+            pageable=PageRequest.of(pageNo,pageSize);
+        }
+
+        Page<PostEntity> postEntitiesList=postRepository.findAll(pageable);
+        if(postEntitiesList!=null){
+            List<PostDto> postDtoList=postEntitiesList.stream().map(postEntity -> postEntityMapper.mapPostEntityToPostDto(postEntity)).collect(Collectors.toList());
+            PostResponse postResponse=PostResponse.builder().content(postDtoList)
+                    .pageNo(postEntitiesList.getNumber()).pageSize(postEntitiesList.getSize())
+                    .totalPages(postEntitiesList.getTotalPages()).totalElements(postEntitiesList.getTotalElements())
+                    .isLastPage(postEntitiesList.isLast()).build();
+            return postResponse;
+        }
+        return null;
+    }
+
 
     //Get PostById
     @Override
